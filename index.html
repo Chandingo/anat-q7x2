@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cadaver ID">
+<meta name="theme-color" content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex, nofollow">
+<title>Cadaver ID</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app" data-screen="loading">
+
+  <!-- ============================================================ top bar -->
+  <header class="topbar">
+    <button id="btnFilters" class="tb-btn" type="button" aria-label="Filters and setup">
+      <span class="ico">☰</span><span class="tb-label">Filters</span>
+    </button>
+    <div class="tb-center">
+      <div id="poolSummary" class="tb-title">Cadaver ID</div>
+      <div id="progress" class="tb-sub"></div>
+    </div>
+    <button id="btnSearch" class="tb-btn" type="button" aria-label="Search structures">
+      <span class="ico">⌕</span><span class="tb-label">Search</span>
+    </button>
+    <button id="btnOffline" class="tb-btn offline-chip" type="button" aria-label="Offline status">
+      <span id="offlineDot" class="dot"></span><span id="offlineText" class="tb-label">Offline…</span>
+    </button>
+  </header>
+
+  <!-- ============================================================ loading -->
+  <section id="screenLoading" class="screen center-msg">
+    <p id="loadingMsg">Loading structures…</p>
+  </section>
+
+  <!-- ============================================================ setup -->
+  <section id="screenSetup" class="screen setup" aria-label="Choose structures">
+    <div class="setup-inner">
+      <div class="setup-head">
+        <h1>Choose what to review</h1>
+        <p class="muted">Tap to combine filters. Nothing selected in a group means “all”.</p>
+      </div>
+
+      <div class="fgroup">
+        <h2>Region</h2>
+        <div id="fRegions" class="chips"></div>
+      </div>
+      <div class="fgroup">
+        <h2>Structure type</h2>
+        <div id="fGroups" class="chips"></div>
+      </div>
+      <div class="fgroup">
+        <h2>Tested on <span class="muted small">(from the MSS list)</span></h2>
+        <div id="fSpecimen" class="chips"></div>
+      </div>
+      <div class="fgroup two">
+        <div>
+          <h2>Answer image</h2>
+          <div id="fImages" class="chips seg"></div>
+        </div>
+        <div>
+          <h2>Review status</h2>
+          <div id="fReview" class="chips seg"></div>
+        </div>
+      </div>
+
+      <div class="setup-actions">
+        <div id="poolCount" class="pool-count"></div>
+        <button id="btnStart" class="btn btn-primary btn-xl" type="button">Start Review</button>
+        <button id="btnResume" class="btn btn-ghost btn-lg" type="button" hidden>Resume current structure</button>
+      </div>
+
+      <div class="setup-tools">
+        <button id="btnClearFilters" class="btn btn-ghost" type="button">Clear filters</button>
+        <button id="btnNewSession" class="btn btn-ghost" type="button">New session (forget “seen”)</button>
+        <details class="tools-more">
+          <summary>Review markers &amp; data</summary>
+          <div class="tools-body">
+            <p id="markCount" class="muted"></p>
+            <div class="row">
+              <button id="btnExportMarks" class="btn btn-ghost" type="button">Export markers</button>
+              <label class="btn btn-ghost file-btn">Import markers<input id="inpImportMarks" type="file" accept="application/json,.json"></label>
+              <button id="btnClearMarks" class="btn btn-ghost danger" type="button">Clear all markers</button>
+            </div>
+            <p id="dataInfo" class="muted small"></p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ study -->
+  <section id="screenStudy" class="screen study" aria-label="Study">
+    <div class="info">
+      <div id="infoHidden" class="info-hidden" hidden>
+        <p>Structure hidden</p>
+        <p class="muted small">Tap “Show name” when you are ready.</p>
+      </div>
+      <div id="infoBody">
+        <div class="name-row">
+          <h1 id="sName" class="s-name"></h1>
+        </div>
+        <p id="sMss" class="s-mss"></p>
+        <dl class="s-meta">
+          <div><dt>Region</dt><dd id="sRegion"></dd></div>
+          <div><dt>Category</dt><dd id="sCategory"></dd></div>
+          <div><dt>Location</dt><dd id="sGuide"></dd></div>
+        </dl>
+        <div id="sChips" class="s-chips"></div>
+      </div>
+      <div class="info-actions">
+        <button id="btnHide" class="btn btn-ghost btn-md" type="button" aria-pressed="false">Hide name</button>
+        <button id="btnHint" class="btn btn-ghost btn-md" type="button">Location hint</button>
+      </div>
+      <details id="relatedBox" class="related" hidden>
+        <summary id="relatedSummary">Related Anki cards</summary>
+        <p class="muted small">From your deck’s action / innervation / attachment cards. Not part of the verified answer key.</p>
+        <ul id="relatedList" class="related-list"></ul>
+      </details>
+    </div>
+
+    <div class="stage-wrap">
+      <div id="stageCover" class="stage-cover">
+        <button id="btnReveal" class="btn btn-reveal" type="button">
+          <span class="big">Reveal Answer Image</span>
+          <span id="revealSub" class="sub"></span>
+        </button>
+      </div>
+      <div id="stageAnswer" class="stage-answer" hidden>
+        <div id="viewer" class="viewer"></div>
+        <div id="noImage" class="no-image" hidden>
+          <p class="no-image-name" id="noImageName"></p>
+          <p class="no-image-msg">No verified Anki image is available for this structure.</p>
+          <p class="muted small" id="noImageWhy"></p>
+        </div>
+        <div class="viewer-bar">
+          <span id="imgCounter" class="img-counter"></span>
+          <span id="imgCaption" class="img-caption"></span>
+          <button id="btnQA" class="btn btn-ghost btn-sm" type="button">Show question image</button>
+          <button id="btnFull" class="btn btn-ghost btn-sm" type="button">Full screen</button>
+          <button id="btnHideAnswer" class="btn btn-ghost btn-sm" type="button">Hide answer</button>
+        </div>
+      </div>
+      <div id="stageHint" class="stage-answer" hidden>
+        <div id="hintViewer" class="viewer"></div>
+        <div class="viewer-bar">
+          <span class="img-caption">Location hint: unlabelled Anki question image (does not reveal the name)</span>
+          <button id="btnCloseHint" class="btn btn-ghost btn-sm" type="button">Close hint</button>
+        </div>
+      </div>
+    </div>
+
+    <nav class="actionbar" aria-label="Structure navigation">
+      <button id="btnPrev" class="btn btn-secondary btn-lg" type="button">‹ Previous</button>
+      <button id="btnMark" class="btn btn-mark btn-lg" type="button" aria-pressed="false">☆ Mark for review</button>
+      <button id="btnNext" class="btn btn-primary btn-lg btn-next" type="button">Next Structure ›</button>
+    </nav>
+  </section>
+
+  <!-- ============================================================ overlays -->
+  <div id="ovFull" class="overlay full" hidden>
+    <div id="fullViewer" class="viewer"></div>
+    <div class="full-bar">
+      <span id="fullCaption" class="img-caption"></span>
+      <button id="btnCloseFull" class="btn btn-primary btn-md" type="button">Close</button>
+    </div>
+  </div>
+
+  <div id="ovSearch" class="overlay panel" hidden role="dialog" aria-label="Search structures">
+    <div class="panel-box">
+      <div class="panel-head">
+        <input id="inpSearch" type="search" placeholder="Search structure, MSS wording or synonym" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button id="btnCloseSearch" class="btn btn-ghost btn-md" type="button">Close</button>
+      </div>
+      <ul id="searchResults" class="search-results"></ul>
+    </div>
+  </div>
+
+  <div id="ovOffline" class="overlay panel" hidden role="dialog" aria-label="Offline use">
+    <div class="panel-box">
+      <div class="panel-head">
+        <h2>Offline use</h2>
+        <button id="btnCloseOffline" class="btn btn-ghost btn-md" type="button">Close</button>
+      </div>
+      <div class="panel-body">
+        <p id="offStatus" class="off-status"></p>
+        <div id="offTiers" class="off-tiers"></div>
+        <div id="offProgress" class="off-progress" hidden><div class="bar"><span></span></div><p class="small"></p></div>
+        <p id="offStorage" class="muted small"></p>
+        <p class="muted small">Downloads are stored in this browser on this iPad only. Add the app to your Home Screen
+          (Share → Add to Home Screen) so iPadOS keeps the downloaded images; Safari may clear website data
+          that has not been used for several weeks.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<script src="js/logic.js"></script>
+<script src="js/viewer.js"></script>
+<script src="js/offline.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
