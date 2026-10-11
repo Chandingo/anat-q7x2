@@ -261,3 +261,5 @@ h1, h2 { margin: 0; }
   .actionbar { grid-template-columns: 1fr 1fr 1.5fr; }
   .btn-lg { font-size: 17px; padding: 0 12px; }
 }
+
+.side-note { margin: 8px 0 0; }

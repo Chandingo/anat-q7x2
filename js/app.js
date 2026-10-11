@@ -6,6 +6,8 @@
 
   var REVEAL_GUARD_MS = 450; // ignore a reveal tap that lands right after navigating (double taps)
   var IMAGE_FILTERS = [["with", "With verified image"], ["all", "All testable"], ["without", "Without image"]];
+  var SIDE_FILTERS = [["any", "Any"], ["supine", "Supine (face up)"], ["prone", "Prone (face down)"]];
+  var SIDE_TEXT = { supine: "Supine side", prone: "Prone side", either: "Either side" };
   var REVIEW_FILTERS = [["all", "All"], ["marked", "Marked for review"], ["unseen", "Not yet seen this session"]];
   var RELATION_TEXT = {
     part_of: "Shows a part of this structure (head / tendon)",
@@ -79,6 +81,7 @@
 
   function filterSummary() {
     var f = filters(), parts = [];
+    if (f.side === "supine" || f.side === "prone") parts.push(SIDE_TEXT[f.side]);
     parts.push(f.regions.length ? f.regions.join(", ") : "All regions");
     if (f.groups.length) parts.push(f.groups.join(", "));
     if (f.specimen.length) parts.push(f.specimen.join("/"));
@@ -113,6 +116,9 @@
       function (v) { toggleIn(f.groups, v); afterFilterChange(); });
     chipRow($("fSpecimen"), specimen, f.specimen, function (v) { return count(function (s) { return s.specimen.indexOf(v) >= 0; }); },
       function (v) { toggleIn(f.specimen, v); afterFilterChange(); });
+    seg($("fSide"), SIDE_FILTERS, f.side || "any", function (v) {
+      return v === "any" ? "" : count(function (s) { return L.sideMatches(s, v); });
+    }, function (v) { f.side = v; afterFilterChange(); });
     seg($("fImages"), IMAGE_FILTERS, f.images, function (v) {
       return v === "all" ? all.length : count(function (s) { return v === "with" ? s.images.length : !s.images.length; });
     }, function (v) { f.images = v; afterFilterChange(); });
@@ -227,6 +233,7 @@
     $("sCategory").textContent = s.category;
     $("sGuide").textContent = s.guide.join(" | ") + (s.listedUnder.length ? " · under " + s.listedUnder.join(", ") : "");
     var chips = s.specimen.map(function (m) { return '<span class="tag">Tested on: ' + esc(m) + "</span>"; });
+    if (s.side) chips.push('<span class="tag">' + esc(SIDE_TEXT[s.side]) + "</span>");
     if (!s.images.length) chips.push('<span class="tag warn">No verified Anki image</span>');
     if (s.partialOnly) chips.push('<span class="tag warn">Image shows a part/member only</span>');
     $("sChips").innerHTML = chips.join("");

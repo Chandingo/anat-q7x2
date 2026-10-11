@@ -44,13 +44,21 @@
   }
 
   // ---------------------------------------------------------------- filters
-  /* filters: { regions:[], groups:[], specimen:[], images:'with'|'all'|'without', review:'all'|'marked'|'unseen' }
+  /* filters: { regions:[], groups:[], specimen:[], images:'with'|'all'|'without', review:'all'|'marked'|'unseen',
+                side:'any'|'supine'|'prone' }
      Empty arrays mean "any". */
   function defaultFilters() {
-    return { regions: [], groups: [], specimen: [], images: "with", review: "all" };
+    return { regions: [], groups: [], specimen: [], images: "with", review: "all", side: "any" };
+  }
+
+  /* Cadaver side: s.side is "supine", "prone", "either" (shown under both) or null (bone/imaging only, never on the cadaver). */
+  function sideMatches(s, side) {
+    if (!side || side === "any") return true;
+    return s.side === side || s.side === "either";
   }
 
   function matches(s, f, marks, seen) {
+    if (!sideMatches(s, f.side)) return false;
     if (f.regions && f.regions.length && f.regions.indexOf(s.region) < 0) return false;
     if (f.groups && f.groups.length && f.groups.indexOf(s.categoryGroup) < 0) return false;
     if (f.specimen && f.specimen.length && !s.specimen.some(function (m) { return f.specimen.indexOf(m) >= 0; })) return false;
@@ -210,7 +218,7 @@
 
   global.CadaverLogic = {
     normalize: normalize, buildSearchIndex: buildSearchIndex, search: search,
-    defaultFilters: defaultFilters, matches: matches, pool: pool,
+    defaultFilters: defaultFilters, matches: matches, sideMatches: sideMatches, pool: pool,
     rng: rng, shuffle: shuffle,
     newSession: newSession, requeue: requeue, next: next, show: show, previous: previous, peekNext: peekNext,
     sanitize: sanitize, makeStore: makeStore, parseMarksImport: parseMarksImport,

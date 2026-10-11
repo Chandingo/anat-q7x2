@@ -5,7 +5,7 @@
      can never be a stale version of a changed file. Viewed images are kept for offline use too. */
 "use strict";
 
-var SHELL = "cadaver-shell-v5";
+var SHELL = "cadaver-shell-v6";
 var MEDIA = "cadaver-media-v1";
 var SHELL_FILES = [
   "./", "index.html", "css/app.css", "js/logic.js", "js/viewer.js", "js/offline.js", "js/app.js",
